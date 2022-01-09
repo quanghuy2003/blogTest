@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+    <script type="text/javascript">
+        function allHome() {
+            $.ajax({
+                type: "GET",
+                url: "http://localhost:8080/api/homes",
+                success: function (hi) {
+                    console.log(hi)
+                    displayHome(hi)
+                }
+            })
+        }
+
+        function displayHome(home) {
+            let res = "";
+            res += `<table border="1" cellpadding="5">
+                <tr>
+                    <th>home</th>
+                    <th>category</th>
+                    <th colspan="3">Action</th>
+                </tr>`
+            for (let i = 0; i < home.length; i++) {
+                res += `<tr>
+                    <td> ${home[i].name}</td>
+                    <td> ${home[i].category.name}</td>
+                    <td><button onclick="viewHome(${home[i].id})">View</button></td>
+                    <td><button onclick="showFormEditHome(${home[i].id})">Edit</button></td>
+                    <td><button onclick="deleteHome(${home[i].id})">Delete</button></td>
+                        </tr>`
+            }
+            res += `</table>`
+            document.getElementById("display").innerHTML = res;
+        }
+
+        function formCreate() {
+            $.ajax({
+                type: "GET",
+                url: "http://localhost:8080/api/homes/category",
+                success: function (category) {
+                    console.log(category);
+                    let form = `<table cellpadding="5">
+      <tr>
+                                <th>name: </th>
+                                <td><input type="text" id="name"></td>
+                            </tr>
+                            <tr>
+                                <th>category: </th>
+                                <td>
+                                    <select id="category">`
+                    for (let i = 0; i < category.length; i++) {
+                        form += `<option value="${category[i].id}">${category[i].name}</option>`
+                    }
+                    form += `</select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th></th>
+                                <td><button onclick="saveHome()">Save</button></td>
+                            </tr>
+                        </table>`;
+                    document.getElementById("display").innerHTML = form;
+                }
+            })
+        }
+
+        function saveHome() {
+            let home = {
+                "name": document.getElementById("name").value,
+                "category": {
+                    "id": document.getElementById("category").value,
+                }
+            }
+            console.log(home)
+            $.ajax({
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                type: "POST",
+                url: "http://localhost:8080/api/homes/save",
+                data: JSON.stringify(home),
+                success: function () {
+                    alert("Thêm Thành Công")
+                    allHome();
+                },
+                error: function (error) {
+                    console.log(error)
+                }
+            })
+        }
+
+
+        function deleteHome(id) {
+            if (confirm("Are you sure")) {
+                $.ajax({
+                    type: "DELETE",
+                    url: "http://localhost:8080/api/homes/" + id,
+                    success: function (home) {
+                        allHome(home)
+                    },
+                    error: function (error) {
+                    }
+                })
+            }
+        }
+
+
+        function viewHome(id) {
+            $.ajax({
+                type: "GET",
+                url: "http://localhost:8080/api/homes/" + id,
+                success: function (home) {
+                    console.log(home)
+                    let view = `<table cellpadding="5">
+                                    <tr>
+                                        <th>name: </th>
+                                        <td>${home.name}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>category: </th>
+                                        <td>${home.category.name}</td>
+                                    </tr>
+                                </table>`;
+                    console.log(view)
+                    document.getElementById("display").innerHTML = view;
+                }
+            })
+        }
+
+
+        function showFormEditHome(id) {
+            $.ajax({
+                type: "GET",
+                url: "http://localhost:8080/api/homes/" + id,
+                success: function (home) {
+                    console.log(home)
+                    $.ajax({
+                        type: "GET",
+                        url: "http://localhost:8080/api/homes/category",
+                        success: function (category) {
+                            console.log(category)
+                            let form =
+                                "<p>name</p>" + `<input type="text" id="name" value="${home.name}">\n` + "<br>" +
+                                "<p>category</p>" + `<select  id="category">
+                                 <option value="${home.category.id}"> ${home.category.name}</option>`
+                            for (let i = 0; i < category.length; i++) {
+                                form += `<option value="${category[i].id}">${category[i].name}</option>`
+                            }
+                            form += `</select>`
+                                + `<button onclick="updateHome(${home.id})">Thay đổi</button>`
+                            console.log(form)
+                            document.getElementById("display").innerHTML = form;
+                        }
+                    })
+                }
+            })
+        }
+
+
+        function updateHome(id) {
+            let name = document.getElementById("name").value;
+            let category = document.getElementById("category").value;
+            let home = {
+                id: id,
+                name: name,
+                category: {
+                    id: category
+                }
+            }
+            console.log(home)
+            $.ajax({
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                type: "PUT",
+                url: "http://localhost:8080/api/homes/" + id,
+                data: JSON.stringify(home),
+                success: function (hí) {
+                    allHome(hí)
+                    alert("xong")
+                },
+                error: function (error) {
+                }
+            })
+        }
+
+
+    </script>
+</head>
+<body>
+<button onclick="allHome()">show post</button>
+<button onclick="formCreate()">add</button>
+<div id="display"></div>
+
+</body>
+</html>
